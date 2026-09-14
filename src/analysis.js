@@ -120,18 +120,32 @@ function buildRecommendation({ recovery, steps, liss, plan }) {
   return lines.join(' ');
 }
 
+function calcTotalExerciseMinutes(exerciseData) {
+  return (exerciseData?.dataPoints ?? []).reduce((sum, p) => {
+    const start = new Date(p.exercise?.interval?.civilStartTime ?? 0);
+    const end   = new Date(p.exercise?.interval?.civilEndTime   ?? 0);
+    return sum + Math.max(0, Math.round((end - start) / 60000));
+  }, 0);
+}
+
 function analyzeToday({ steps, sleep, exercise }) {
   const plan     = getTodayPlan();
   const recovery = calcRecoveryScore(sleep);
   const stepsRes = calcStepsScore(steps);
   const liss     = calcLISS(exercise, plan.lissMinutes);
+  const totalExerciseMinutes = calcTotalExerciseMinutes(exercise);
   const recommendation = buildRecommendation({ recovery, steps: stepsRes, liss, plan });
+
+  // Qualifying session = any exercise >= 30 min (weights + LISS combined)
+  const hasTrainingSession = totalExerciseMinutes >= 30;
 
   return {
     plan,
     recovery,
     steps: stepsRes,
     liss,
+    totalExerciseMinutes,
+    hasTrainingSession,
     nutrition: {
       tmb: PROFILE.tmb,
       maintenance: PROFILE.maintenance,

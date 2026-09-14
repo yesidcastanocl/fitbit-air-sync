@@ -77,10 +77,14 @@ async function setupSpreadsheet() {
   };
 }
 
-async function syncToSheet(date, analysis) {
+async function syncToSheet(date, analysis, smartMode = false) {
   const token = await getValidToken();
   const spreadsheetId = getSpreadsheetId();
   if (!spreadsheetId) throw new Error('Spreadsheet no configurado. Ve a /sheets/setup primero.');
+
+  // Smart mode: si es día de entrenamiento y no hay sesión detectada, deja campos de ejercicio vacíos
+  const isTrainingDay = analysis.plan.lissMinutes > 0;
+  const writeExercise = !smartMode || !isTrainingDay || analysis.hasTrainingSession;
 
   const dow = new Date(`${date}T12:00:00`).getDay();
   const row = [
@@ -93,9 +97,9 @@ async function syncToSheet(date, analysis) {
     analysis.recovery.remMinutes,
     analysis.recovery.score,
     analysis.recovery.label,
-    analysis.liss.required,
-    analysis.liss.completed,
-    analysis.liss.done ? 'Sí' : 'No',
+    writeExercise ? analysis.liss.required   : '',
+    writeExercise ? analysis.liss.completed  : '',
+    writeExercise ? (analysis.liss.done ? 'Sí' : 'No') : 'Pendiente',
     analysis.plan.muscles,
     analysis.recommendation,
   ];

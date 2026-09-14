@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cron = require('node-cron');
 const { getAuthUrl, exchangeCode } = require('./src/auth');
 const { getTokensAsBase64 } = require('./src/tokens');
 const { getTodayData, getWeekData } = require('./src/healthApi');
@@ -105,6 +106,20 @@ app.get('/sheets/sync', async (_req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Auto-sync cada 2 horas de 8 AM a 10 PM (hora Santiago)
+// Solo escribe ejercicio si detecta sesión real >= 30 min
+cron.schedule('0 8,10,12,14,16,18,20,22 * * *', async () => {
+  console.log('[cron] Auto-sync iniciando...');
+  try {
+    const data = await getTodayData();
+    const analysis = analyzeToday(data);
+    const result = await syncToSheet(data.date, analysis, true); // smartMode = true
+    console.log(`[cron] Auto-sync: ${result.action} — entrenamiento detectado: ${analysis.hasTrainingSession}`);
+  } catch (err) {
+    console.error('[cron] Error en auto-sync:', err.message);
+  }
+}, { timezone: 'America/Santiago' });
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
