@@ -4,12 +4,12 @@ const { loadTokens, saveTokens } = require('./tokens');
 
 const BASE_URL = 'https://health.googleapis.com/v4';
 
-// La URL del path usa guiones; el filtro usa guion_bajo
+// path: nombre en la URL; filterPrefix: prefijo del filtro; timeType: interval|sample_time; timeField: campo de tiempo
 const DATA_TYPES = {
-  steps:     { path: 'steps',      filter: 'steps' },
-  sleep:     { path: 'sleep',      filter: 'sleep' },
-  heartRate: { path: 'heart-rate', filter: 'heart_rate' },
-  exercise:  { path: 'exercise',   filter: 'exercise' },
+  steps:     { path: 'steps',      filterPrefix: 'steps',      timeType: 'interval',    timeField: 'civil_start_time' },
+  sleep:     { path: 'sleep',      filterPrefix: 'sleep',      timeType: 'interval',    timeField: 'civil_start_time' },
+  heartRate: { path: 'heart-rate', filterPrefix: 'heart_rate', timeType: 'sample_time', timeField: 'civil_time'        },
+  exercise:  { path: 'exercise',   filterPrefix: 'exercise',   timeType: 'interval',    timeField: 'civil_start_time' },
 };
 
 async function getValidToken() {
@@ -32,25 +32,23 @@ async function getValidToken() {
   return token;
 }
 
-function buildFilter(filterName, startDate, endDate) {
-  return (
-    `${filterName}.interval.civil_start_time >= "${startDate}T00:00:00" ` +
-    `AND ${filterName}.interval.civil_start_time < "${endDate}T23:59:59"`
-  );
+function buildFilter({ filterPrefix, timeType, timeField }, startDate, endDate) {
+  const field = `${filterPrefix}.${timeType}.${timeField}`;
+  return `${field} >= "${startDate}T00:00:00" AND ${field} < "${endDate}T23:59:59"`;
 }
 
-async function queryDataType(pathName, filterName, startDate, endDate, accessToken) {
+async function queryDataType(type, startDate, endDate, accessToken) {
   try {
     const response = await axios.get(
-      `${BASE_URL}/users/me/dataTypes/${pathName}/dataPoints`,
+      `${BASE_URL}/users/me/dataTypes/${type.path}/dataPoints`,
       {
         headers: { Authorization: `Bearer ${accessToken}` },
-        params: { filter: buildFilter(filterName, startDate, endDate) },
+        params: { filter: buildFilter(type, startDate, endDate) },
       }
     );
     return response.data;
   } catch (err) {
-    console.error(`[healthApi] Error en ${pathName}:`, err.response?.data ?? err.message);
+    console.error(`[healthApi] Error en ${type.path}:`, err.response?.data ?? err.message);
     return { error: err.response?.data?.error?.message ?? err.message };
   }
 }
@@ -59,10 +57,10 @@ async function fetchAllTypes(startDate, endDate) {
   const token = await getValidToken();
 
   const [steps, sleep, heartRate, exercise] = await Promise.all([
-    queryDataType(DATA_TYPES.steps.path,     DATA_TYPES.steps.filter,     startDate, endDate, token),
-    queryDataType(DATA_TYPES.sleep.path,     DATA_TYPES.sleep.filter,     startDate, endDate, token),
-    queryDataType(DATA_TYPES.heartRate.path, DATA_TYPES.heartRate.filter, startDate, endDate, token),
-    queryDataType(DATA_TYPES.exercise.path,  DATA_TYPES.exercise.filter,  startDate, endDate, token),
+    queryDataType(DATA_TYPES.steps,     startDate, endDate, token),
+    queryDataType(DATA_TYPES.sleep,     startDate, endDate, token),
+    queryDataType(DATA_TYPES.heartRate, startDate, endDate, token),
+    queryDataType(DATA_TYPES.exercise,  startDate, endDate, token),
   ]);
 
   return { steps, sleep, heartRate, exercise };
