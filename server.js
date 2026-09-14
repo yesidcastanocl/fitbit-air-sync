@@ -13,6 +13,8 @@ app.use(cors());
 app.use(express.static('public'));  // sirve el dashboard en /
 const PORT = process.env.PORT || 3000;
 
+app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+
 app.get('/api', (_req, res) => {
   res.json({
     status: 'ok',
