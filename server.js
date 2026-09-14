@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const cron = require('node-cron');
 const { getAuthUrl, exchangeCode } = require('./src/auth');
 const { getTokensAsBase64 } = require('./src/tokens');
@@ -8,6 +9,7 @@ const { analyzeToday } = require('./src/analysis');
 const { setupSpreadsheet, syncToSheet } = require('./src/sheetsApi');
 
 const app = express();
+app.use(cors());
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (_req, res) => {
