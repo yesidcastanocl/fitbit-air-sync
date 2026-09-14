@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const { getAuthUrl, exchangeCode } = require('./src/auth');
+const { getTokensAsBase64 } = require('./src/tokens');
 const { getTodayData, getWeekData } = require('./src/healthApi');
 
 const app = express();
@@ -32,7 +33,12 @@ app.get('/oauth/callback', async (req, res) => {
 
   try {
     await exchangeCode(code);
-    res.json({ message: '✅ Autorización exitosa. Tokens guardados. Ya puedes usar /data/today y /data/week.' });
+    const b64 = getTokensAsBase64();
+    res.json({
+      message: '✅ Autorización exitosa. Tokens guardados.',
+      next: 'Ejecuta este comando para hacer los tokens permanentes (sobreviven redeploys):',
+      command: `railway variables set TOKEN_JSON="${b64}"`,
+    });
   } catch (err) {
     console.error('[oauth/callback]', err.message);
     res.status(500).json({ error: 'Error al intercambiar el código por tokens.', detail: err.message });
