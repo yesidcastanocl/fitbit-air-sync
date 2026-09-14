@@ -21,40 +21,46 @@ function getTodayPlan() {
 }
 
 function calcRecoveryScore(sleepData) {
-  if (!sleepData?.dataPoints?.length) return { score: 0, label: 'Sin datos de sueño' };
+  if (!sleepData?.dataPoints?.length) return { score: 0, label: 'Sin datos de sueño', totalMinutes: 0, deepMinutes: 0, remMinutes: 0, totalHours: '0.0' };
 
-  const point = sleepData.dataPoints[0];
+  const point   = sleepData.dataPoints[0];
   const summary = point?.sleep?.summary ?? {};
-  const totalMin = summary.minutesAsleep ?? 0;
-  const deepMin  = summary.deepSleepMinutes ?? 0;
-  const remMin   = summary.remSleepMinutes ?? 0;
+
+  // API devuelve strings — convertir a número
+  const totalMin = Number(summary.minutesAsleep ?? 0);
+
+  // Etapas de sueño vienen en stagesSummary[] con {type, minutes}
+  const stages  = summary.stagesSummary ?? [];
+  const deepMin = Number(stages.find(s => s.type === 'DEEP')?.minutes ?? 0);
+  const remMin  = Number(stages.find(s => s.type === 'REM')?.minutes  ?? 0);
 
   // Scoring: total (max 40), deep (max 35), REM (max 25)
-  const totalScore = Math.min(40, Math.round((totalMin / 480) * 40)); // 8h = perfect
-  const deepScore  = Math.min(35, Math.round((deepMin  / 90)  * 35)); // 90 min deep = perfect
-  const remScore   = Math.min(25, Math.round((remMin   / 90)  * 25)); // 90 min REM = perfect
+  const totalScore = Math.min(40, Math.round((totalMin / 480) * 40));
+  const deepScore  = Math.min(35, Math.round((deepMin  / 90)  * 35));
+  const remScore   = Math.min(25, Math.round((remMin   / 90)  * 25));
 
   const score = totalScore + deepScore + remScore;
 
   let label;
-  if (score >= 85) label = 'Recuperación óptima';
+  if (score >= 85)      label = 'Recuperación óptima';
   else if (score >= 65) label = 'Recuperación buena';
   else if (score >= 45) label = 'Recuperación moderada';
-  else label = 'Recuperación insuficiente';
+  else                  label = 'Recuperación insuficiente';
 
   return {
     score,
     label,
     totalMinutes: totalMin,
-    deepMinutes: deepMin,
-    remMinutes: remMin,
-    totalHours: (totalMin / 60).toFixed(1),
+    deepMinutes:  deepMin,
+    remMinutes:   remMin,
+    totalHours:   (totalMin / 60).toFixed(1),
   };
 }
 
 function calcStepsScore(stepsData) {
+  // count llega como string desde la API — forzar conversión a número
   const total = (stepsData?.dataPoints ?? [])
-    .reduce((sum, p) => sum + (p.steps?.count ?? 0), 0);
+    .reduce((sum, p) => sum + Number(p.steps?.count ?? 0), 0);
 
   let label;
   if (total >= 10000) label = 'Excelente';
