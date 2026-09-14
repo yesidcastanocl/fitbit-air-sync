@@ -7,8 +7,8 @@ const BASE_URL = 'https://health.googleapis.com/v4';
 // path: nombre en la URL; filterPrefix: prefijo del filtro; timeType: interval|sample_time; timeField: campo de tiempo
 const DATA_TYPES = {
   steps:     { path: 'steps',      filterPrefix: 'steps',      timeType: 'interval',    timeField: 'civil_start_time' },
-  sleep:     { path: 'sleep',      filterPrefix: 'sleep',      timeType: 'interval',    timeField: 'civil_start_time' },
-  heartRate: { path: 'heart-rate', filterPrefix: 'heart_rate', timeType: 'sample_time', timeField: 'civil_time'        },
+  sleep:     { path: 'sleep',      filterPrefix: 'sleep',      timeType: 'interval',    timeField: 'civil_end_time'   },
+  heartRate: { path: 'heart-rate', filterPrefix: 'heart-rate', timeType: 'sample_time', timeField: 'civil_time'       },
   exercise:  { path: 'exercise',   filterPrefix: 'exercise',   timeType: 'interval',    timeField: 'civil_start_time' },
 };
 
