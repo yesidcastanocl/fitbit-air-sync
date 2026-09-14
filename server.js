@@ -3,6 +3,8 @@ const express = require('express');
 const { getAuthUrl, exchangeCode } = require('./src/auth');
 const { getTokensAsBase64 } = require('./src/tokens');
 const { getTodayData, getWeekData } = require('./src/healthApi');
+const { analyzeToday } = require('./src/analysis');
+const { setupSpreadsheet, syncToSheet } = require('./src/sheetsApi');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,17 +12,23 @@ const PORT = process.env.PORT || 3000;
 app.get('/', (_req, res) => {
   res.json({
     status: 'ok',
-    endpoints: ['/auth/start', '/oauth/callback', '/data/today', '/data/week'],
+    endpoints: [
+      '/auth/start',
+      '/oauth/callback',
+      '/data/today',
+      '/data/week',
+      '/data/today/analysis',
+      '/sheets/setup',
+      '/sheets/sync',
+    ],
   });
 });
 
-// Paso 1: redirige al consentimiento de Google
 app.get('/auth/start', (_req, res) => {
   const url = getAuthUrl();
   res.redirect(url);
 });
 
-// Paso 2: Google redirige aquí con el código de autorización
 app.get('/oauth/callback', async (req, res) => {
   const { code, error } = req.query;
 
@@ -45,7 +53,6 @@ app.get('/oauth/callback', async (req, res) => {
   }
 });
 
-// Resumen del día actual
 app.get('/data/today', async (_req, res) => {
   try {
     const data = await getTodayData();
@@ -56,13 +63,45 @@ app.get('/data/today', async (_req, res) => {
   }
 });
 
-// Resumen de los últimos 7 días
 app.get('/data/week', async (_req, res) => {
   try {
     const data = await getWeekData();
     res.json(data);
   } catch (err) {
     console.error('[data/week]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/data/today/analysis', async (_req, res) => {
+  try {
+    const data = await getTodayData();
+    const analysis = analyzeToday(data);
+    res.json({ date: data.date, ...analysis });
+  } catch (err) {
+    console.error('[data/today/analysis]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/sheets/setup', async (_req, res) => {
+  try {
+    const result = await setupSpreadsheet();
+    res.json(result);
+  } catch (err) {
+    console.error('[sheets/setup]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/sheets/sync', async (_req, res) => {
+  try {
+    const data = await getTodayData();
+    const analysis = analyzeToday(data);
+    const result = await syncToSheet(data.date, analysis);
+    res.json({ ...result, spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${process.env.SPREADSHEET_ID ?? '(ver /sheets/setup)'}` });
+  } catch (err) {
+    console.error('[sheets/sync]', err.message);
     res.status(500).json({ error: err.message });
   }
 });

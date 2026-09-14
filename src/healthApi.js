@@ -97,4 +97,4 @@ async function getWeekData() {
   return { from: weekAgoStr, to: todayStr, ...data };
 }
 
-module.exports = { getTodayData, getWeekData };
+module.exports = { getTodayData, getWeekData, getValidToken };
