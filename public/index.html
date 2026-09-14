@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yesid Castaño — Training Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --card: #161616;
+      --border: #262626;
+      --orange: #f97316;
+      --orange-dim: rgba(249,115,22,0.10);
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --text: #f5f5f5;
+      --muted: #737373;
+      --radius: 14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 48px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #1c0e00 0%, #0d0d0d 55%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 20px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 {
+      font-size: 1.45rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+    .header h1 span { color: var(--orange); }
+    .header-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--orange-dim);
+      border: 1px solid rgba(249,115,22,0.28);
+      border-radius: 20px;
+      padding: 5px 11px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--orange);
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+    .pulse {
+      width: 7px; height: 7px;
+      background: var(--orange);
+      border-radius: 50%;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:0.35; transform:scale(0.65); }
+    }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 600px; margin: 0 auto; padding: 16px 14px 0; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+    /* ── CARD BASE ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+    }
+    .card-full { margin-bottom: 12px; }
+    .card-label {
+      font-size: 0.63rem;
+      font-weight: 700;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 11px;
+    }
+
+    /* ── HOY ── */
+    .today-card {
+      border-color: rgba(249,115,22,0.30);
+      background: linear-gradient(145deg, #1c0f01, #161616);
+    }
+    .today-muscles {
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 10px;
+      min-height: 2.5rem;
+    }
+    .today-liss {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--orange);
+    }
+    .rest-label { font-size: 1rem; font-weight: 700; color: var(--muted); }
+
+    /* ── RECOVERY RING ── */
+    .recovery-card { text-align: center; }
+    .ring-wrap { display: flex; justify-content: center; margin: 4px 0 6px; }
+    .ring-svg { width: 86px; height: 86px; }
+    .ring-bg  { fill:none; stroke:var(--border); stroke-width:8; }
+    .ring-fg  {
+      fill:none; stroke:#f97316; stroke-width:8; stroke-linecap:round;
+      transform-origin:center; transform:rotate(-90deg);
+      transition: stroke-dashoffset 1.1s ease, stroke 0.4s ease;
+    }
+    .ring-num { font-size:0.95rem; font-weight:800; fill:var(--text); }
+    .ring-pts { font-size:0.38rem; fill:var(--muted); }
+    .rec-sub  { font-size:0.72rem; color:var(--muted); line-height:1.5; }
+
+    /* ── STEPS ── */
+    .big-num {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+    }
+    .progress-bar {
+      background: var(--border);
+      border-radius: 4px;
+      height: 5px;
+      margin: 10px 0 5px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--orange);
+      width: 0%;
+      transition: width 1.1s ease;
+    }
+    .card-sub { font-size: 0.75rem; color: var(--muted); }
+
+    /* ── LISS ── */
+    .liss-val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .liss-val .done-color  { color: var(--green); }
+    .liss-val .pend-color  { color: var(--orange); }
+    .liss-val .denom { font-size:0.95rem; font-weight:600; color:var(--muted); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      margin-top: 7px;
+    }
+    .badge-done { background:rgba(34,197,94,0.14); color:var(--green); }
+    .badge-pend { background:rgba(249,115,22,0.14); color:var(--orange); }
+    .badge-rest { background:rgba(115,115,115,0.14); color:var(--muted); }
+
+    /* ── NUTRITION ── */
+    .nut-row {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr 1px 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .nut-divider { background: var(--border); }
+    .nut-item { text-align: center; }
+    .nut-val { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
+    .nut-label { font-size: 0.62rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.6px; margin-top:3px; }
+    .c-orange { color: var(--orange); }
+    .c-green  { color: var(--green);  }
+    .nut-tips {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: #a3a3a3;
+      line-height: 1.75;
+    }
+    .nut-tip-title {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* ── WEEK TABLE ── */
+    .week-table { width:100%; border-collapse:collapse; margin-top:12px; font-size:0.82rem; }
+    .week-table tr { border-bottom: 1px solid var(--border); }
+    .week-table tr:last-child { border-bottom: none; }
+    .week-table tr.is-today { background: var(--orange-dim); }
+    .week-table td { padding: 10px 4px; vertical-align: middle; }
+    .td-day { width:36px; font-weight:700; color:var(--muted); }
+    .td-day.is-today { color:var(--orange); }
+    .td-muscles { font-weight:500; }
+    .td-muscles.is-rest { color:var(--muted); }
+    .td-liss { text-align:right; font-size:0.7rem; font-weight:600; color:var(--muted); white-space:nowrap; }
+    .td-liss.has-liss { color:var(--orange); }
+    .today-pill {
+      display: inline-block;
+      background: var(--orange);
+      color: #000;
+      font-size: 0.52rem;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      margin-left: 7px;
+      vertical-align: middle;
+    }
+
+    /* ── RECOMMENDATION ── */
+    .rec-body {
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: #c4c4c4;
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* ── STATUS ── */
+    .loading-row { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:0.78rem; }
+    .spinner {
+      width:14px; height:14px;
+      border:2px solid var(--border);
+      border-top-color:var(--orange);
+      border-radius:50%;
+      animation:spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .err-text { color:var(--red); font-size:0.78rem; }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 30px;
+      line-height: 1.8;
+    }
+    .footer .acc { color: var(--orange); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <h1>Yesid <span>Castaño</span></h1>
+    <div class="header-sub" id="headerDate">—</div>
+  </div>
+  <div class="live-badge"><span class="pulse"></span>LIVE</div>
+</div>
+
+<div class="container">
+
+  <!-- ROW 1: Hoy + Recuperación -->
+  <div class="grid-2">
+
+    <div class="card today-card">
+      <div class="card-label">Entrenamiento de hoy</div>
+      <div class="today-muscles" id="todayMuscles">
+        <div class="loading-row"><div class="spinner"></div></div>
+      </div>
+      <div class="today-liss" id="todayLiss"></div>
+    </div>
+
+    <div class="card recovery-card">
+      <div class="card-label">Recuperación</div>
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 100 100">
+          <circle class="ring-bg" cx="50" cy="50" r="38"/>
+          <circle class="ring-fg" id="ringFg" cx="50" cy="50" r="38"
+            stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
+          <text class="ring-num" id="ringNum" x="50" y="53" text-anchor="middle">—</text>
+          <text class="ring-pts" x="50" y="63" text-anchor="middle">/ 100</text>
+        </svg>
+      </div>
+      <div class="rec-sub" id="recoveryLabel">Sin datos</div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: Pasos + LISS -->
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-label">Pasos hoy</div>
+      <div class="big-num" id="stepsNum">—</div>
+      <div class="progress-bar"><div class="progress-fill" id="stepsBar"></div></div>
+      <div class="card-sub" id="stepsLabel">Cargando...</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">LISS Cardio</div>
+      <div class="liss-val" id="lissVal">—</div>
+      <div class="card-sub" id="lissSub"></div>
+      <div id="lissBadge"></div>
+    </div>
+
+  </div>
+
+  <!-- NUTRICIÓN -->
+  <div class="card card-full">
+    <div class="card-label">Nutrición — Definición</div>
+    <div class="nut-row">
+      <div class="nut-item">
+        <div class="nut-val">1,556</div>
+        <div class="nut-label">TMB kcal</div>
+      </div>
+      <div class="nut-divider"></div>
+      <div class="nut-item">
+        <div class="nut-val c-orange">1,850</div>
+        <div class="nut-label">Objetivo kcal</div>
+      </div>
+      <div class="nut-divider"></div>
+      <div class="nut-item">
+        <div class="nut-val c-green">−600</div>
+        <div class="nut-label">Déficit kcal</div>
+      </div>
+    </div>
+    <div class="nut-tips">
+      <div class="nut-tip-title">Principios clave</div>
+      🥩 Proteína alta &nbsp;·&nbsp; 🥗 Carbohidratos ajustados al entrenamiento
+      &nbsp;·&nbsp; 💧 Hidratación ≥ 2.5 L &nbsp;·&nbsp; 🚫 Sin ultraprocesados
+    </div>
+  </div>
+
+  <!-- PLAN SEMANAL -->
+  <div class="card card-full">
+    <div class="card-label">Plan Semanal de Entrenamiento</div>
+    <table class="week-table">
+      <tbody id="weekBody">
+        <tr data-dow="1">
+          <td class="td-day">LUN</td>
+          <td class="td-muscles">Hombro + Tríceps</td>
+          <td class="td-liss has-liss">LISS 45 min</td>
+        </tr>
+        <tr data-dow="2">
+          <td class="td-day">MAR</td>
+          <td class="td-muscles">Espalda + Pectoral</td>
+          <td class="td-liss has-liss">LISS 40 min</td>
+        </tr>
+        <tr data-dow="3">
+          <td class="td-day">MIÉ</td>
+          <td class="td-muscles">Hombro + Abdomen</td>
+          <td class="td-liss has-liss">LISS 30 min</td>
+        </tr>
+        <tr data-dow="4">
+          <td class="td-day">JUE</td>
+          <td class="td-muscles">Pierna + Bíceps</td>
+          <td class="td-liss has-liss">LISS 45 min</td>
+        </tr>
+        <tr data-dow="5">
+          <td class="td-day">VIE</td>
+          <td class="td-muscles">Hombro + Abdomen</td>
+          <td class="td-liss has-liss">LISS 50 min</td>
+        </tr>
+        <tr data-dow="6">
+          <td class="td-day">SÁB</td>
+          <td class="td-muscles is-rest">Descanso</td>
+          <td class="td-liss">—</td>
+        </tr>
+        <tr data-dow="0">
+          <td class="td-day">DOM</td>
+          <td class="td-muscles is-rest">Descanso</td>
+          <td class="td-liss">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RECOMENDACIÓN -->
+  <div class="card card-full">
+    <div class="card-label">Recomendación del día</div>
+    <div class="rec-body" id="recBody">
+      <div class="loading-row"><div class="spinner"></div> Analizando datos de hoy...</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Datos en tiempo real desde <span class="acc">Google Health API</span> vía Fitbit Air
+    <br>
+    <span id="lastUpdate"></span>
+  </div>
+
+</div>
+
+<script>
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const fmt = n => Number(n).toLocaleString('es-CO');
+
+  // ── header date ──────────────────────────────────────────────────────────
+  function setDate() {
+    const d = new Date();
+    const days   = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    $('headerDate').textContent =
+      `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  // ── highlight today in week table ────────────────────────────────────────
+  function highlightToday() {
+    const dow = new Date().getDay();
+    document.querySelectorAll('#weekBody tr').forEach(tr => {
+      if (parseInt(tr.dataset.dow) !== dow) return;
+      tr.classList.add('is-today');
+      tr.querySelector('.td-day').classList.add('is-today');
+      const pill = document.createElement('span');
+      pill.className = 'today-pill';
+      pill.textContent = 'HOY';
+      tr.querySelector('.td-muscles').appendChild(pill);
+    });
+  }
+
+  // ── recovery ring ────────────────────────────────────────────────────────
+  function setRing(score) {
+    const circ = 238.76;
+    $('ringFg').setAttribute('stroke-dashoffset', circ - (score / 100) * circ);
+    $('ringFg').setAttribute('stroke',
+      score >= 85 ? '#22c55e' : score >= 65 ? '#f97316' : score >= 45 ? '#eab308' : '#ef4444');
+    $('ringNum').textContent = score;
+  }
+
+  // ── render API data ───────────────────────────────────────────────────────
+  function render(d) {
+    const { plan, recovery, steps, liss, recommendation } = d;
+
+    // today plan
+    if (plan.lissMinutes === 0) {
+      $('todayMuscles').innerHTML = `<span class="rest-label">💤 Descanso</span>`;
+      $('todayLiss').textContent = '';
+    } else {
+      $('todayMuscles').textContent = plan.muscles;
+      $('todayLiss').innerHTML =
+        `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> LISS ${plan.lissMinutes} min`;
+    }
+
+    // recovery
+    setRing(recovery.score);
+    $('recoveryLabel').innerHTML =
+      `${recovery.label}<br><span style="font-size:0.68rem">${recovery.totalHours}h · ${recovery.deepMinutes} min profundo · ${recovery.remMinutes} min REM</span>`;
+
+    // steps
+    $('stepsNum').textContent = fmt(steps.total);
+    $('stepsLabel').textContent = steps.label;
+    $('stepsBar').style.width = Math.min(100, Math.round((steps.total / 10000) * 100)) + '%';
+
+    // liss
+    if (plan.lissMinutes === 0) {
+      $('lissVal').innerHTML = `<span style="font-size:0.95rem;color:var(--muted)">Día libre</span>`;
+      $('lissSub').textContent = '';
+      $('lissBadge').innerHTML = `<span class="badge badge-rest">Descanso activo</span>`;
+    } else {
+      const cls = liss.done ? 'done-color' : 'pend-color';
+      $('lissVal').innerHTML =
+        `<span class="${cls}">${liss.completed}</span><span class="denom"> / ${liss.required} min</span>`;
+      $('lissSub').textContent = liss.sessions
+        ? `${liss.sessions} sesión${liss.sessions > 1 ? 'es' : ''} detectada${liss.sessions > 1 ? 's' : ''}`
+        : 'Sin sesiones registradas aún';
+      $('lissBadge').innerHTML = liss.done
+        ? `<span class="badge badge-done">✓ Completado</span>`
+        : `<span class="badge badge-pend">Pendiente</span>`;
+    }
+
+    // recommendation
+    $('recBody').textContent = `"${recommendation}"`;
+
+    // timestamp
+    $('lastUpdate').textContent =
+      `Última actualización: ${new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'})}`;
+  }
+
+  // ── fetch ─────────────────────────────────────────────────────────────────
+  async function fetchData() {
+    try {
+      const res = await fetch('/data/today/analysis');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      render(await res.json());
+    } catch (err) {
+      $('recBody').innerHTML = `<span class="err-text">⚠ No se pudieron cargar los datos: ${err.message}</span>`;
+      $('todayMuscles').innerHTML = `<span class="err-text">Sin conexión</span>`;
+    }
+  }
+
+  // ── init ──────────────────────────────────────────────────────────────────
+  setDate();
+  highlightToday();
+  fetchData();
+  setInterval(fetchData, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>

@@ -10,11 +10,13 @@ const { setupSpreadsheet, syncToSheet } = require('./src/sheetsApi');
 
 const app = express();
 app.use(cors());
+app.use(express.static('public'));  // sirve el dashboard en /
 const PORT = process.env.PORT || 3000;
 
-app.get('/', (_req, res) => {
+app.get('/api', (_req, res) => {
   res.json({
     status: 'ok',
+    dashboard: '/  (index.html)',
     endpoints: [
       '/auth/start',
       '/oauth/callback',
