@@ -6,10 +6,10 @@ const BASE_URL = 'https://health.googleapis.com/v4';
 
 // path: nombre en la URL; filterPrefix: prefijo del filtro; timeType: interval|sample_time; timeField: campo de tiempo
 const DATA_TYPES = {
-  steps:     { path: 'steps',      filterPrefix: 'steps',      timeType: 'interval',    timeField: 'civil_start_time' },
-  sleep:     { path: 'sleep',      filterPrefix: 'sleep',      timeType: 'interval',    timeField: 'civil_end_time'   },
-  heartRate: { path: 'heart-rate', filterPrefix: 'heart-rate', timeType: 'sample_time', timeField: 'civil_time'       },
-  exercise:  { path: 'exercise',   filterPrefix: 'exercise',   timeType: 'interval',    timeField: 'civil_start_time' },
+  steps:     { path: 'steps',      filterPrefix: 'steps',    timeType: 'interval',    timeField: 'civil_start_time' },
+  sleep:     { path: 'sleep',      filterPrefix: 'sleep',    timeType: 'interval',    timeField: 'civil_end_time'   },
+  heartRate: { path: 'heart-rate', noFilter: true }, // la API no permite filtrar heart-rate por fecha
+  exercise:  { path: 'exercise',   filterPrefix: 'exercise', timeType: 'interval',    timeField: 'civil_start_time' },
 };
 
 async function getValidToken() {
@@ -39,13 +39,22 @@ function buildFilter({ filterPrefix, timeType, timeField }, startDate, endDate) 
 
 async function queryDataType(type, startDate, endDate, accessToken) {
   try {
+    const params = type.noFilter ? {} : { filter: buildFilter(type, startDate, endDate) };
     const response = await axios.get(
       `${BASE_URL}/users/me/dataTypes/${type.path}/dataPoints`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        params: { filter: buildFilter(type, startDate, endDate) },
-      }
+      { headers: { Authorization: `Bearer ${accessToken}` }, params }
     );
+
+    // Para tipos sin filtro, recortamos por fecha en el servidor
+    if (type.noFilter && response.data.dataPoints) {
+      const start = new Date(`${startDate}T00:00:00`);
+      const end   = new Date(`${endDate}T23:59:59`);
+      response.data.dataPoints = response.data.dataPoints.filter(p => {
+        const t = new Date(p.heartRate?.sampleTime?.physicalTime ?? p.heartRate?.sampleTime?.civilTime ?? 0);
+        return t >= start && t <= end;
+      });
+    }
+
     return response.data;
   } catch (err) {
     console.error(`[healthApi] Error en ${type.path}:`, err.response?.data ?? err.message);
